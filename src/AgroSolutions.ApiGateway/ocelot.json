@@ -1,0 +1,191 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/gestao/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agrosolutions-gestao-api",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/gestao/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH" ],
+      "Key": "gestao",
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 60,
+        "Limit": 100
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 30000,
+        "TimeoutValue": 10000
+      },
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/ingestao/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agrosolutions-ingestao-api",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/ingestao/{everything}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "Key": "ingestao",
+      "Priority": 1,
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 60,
+        "Limit": 1000
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 5,
+        "DurationOfBreak": 10000,
+        "TimeoutValue": 5000
+      },
+      "LoadBalancerOptions": {
+        "Type": "LeastConnection"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/telemetria/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agrosolutions-telemetria-api",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/telemetria/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Key": "telemetria",
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 60,
+        "Limit": 200
+      },
+      "FileCacheOptions": {
+        "TtlSeconds": 30,
+        "Region": "telemetria"
+      },
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/alertas/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agrosolutions-alertas-api",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/alertas/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT" ],
+      "Key": "alertas",
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 60,
+        "Limit": 150
+      },
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/dashboard/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agrosolutions-dashboard-api",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/dashboard/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Key": "dashboard",
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 60,
+        "Limit": 100
+      },
+      "FileCacheOptions": {
+        "TtlSeconds": 60,
+        "Region": "dashboard"
+      },
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agrosolutions-gestao-api",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/gestao/health",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agrosolutions-ingestao-api",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/ingestao/health",
+      "UpstreamHttpMethod": [ "GET" ]
+    }
+  ],
+  "Aggregates": [
+    {
+      "RouteKeys": [
+        "gestao",
+        "telemetria"
+      ],
+      "UpstreamPathTemplate": "/api/dashboard/propriedade/{id}",
+      "Aggregator": "PropriedadeAggregator"
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5000",
+    "RequestIdKey": "X-Correlation-Id",
+    "RateLimitOptions": {
+      "DisableRateLimitHeaders": false,
+      "QuotaExceededMessage": "Rate limit exceeded. Please try again later.",
+      "HttpStatusCode": 429,
+      "ClientIdHeader": "X-ClientId"
+    },
+    "QoSOptions": {
+      "ExceptionsAllowedBeforeBreaking": 3,
+      "DurationOfBreak": 30000,
+      "TimeoutValue": 10000
+    },
+    "ServiceDiscoveryProvider": {
+      "Namespace": "agrosolutions",
+      "Type": "Kubernetes"
+    }
+  }
+}

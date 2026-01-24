@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agrosolutions
+  labels:
+    name: agrosolutions
+    environment: production
