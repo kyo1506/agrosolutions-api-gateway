@@ -101,7 +101,7 @@ public static class RateLimitingExtensions
                             MetadataName.RetryAfter,
                             out var retryAfter
                         )
-                            ? retryAfter.TotalSeconds
+                            ? (double?)retryAfter.TotalSeconds
                             : null,
                     },
                     cancellationToken: cancellationToken
