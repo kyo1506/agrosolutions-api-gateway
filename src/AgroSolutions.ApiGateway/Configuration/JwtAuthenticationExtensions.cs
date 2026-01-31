@@ -1,11 +1,10 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AgroSolutions.ApiGateway.Configuration;
 
 /// <summary>
-/// Extensões para configuração de autenticação JWT
+/// Extensões para configuração de autenticação JWT com Keycloak
 /// </summary>
 public static class JwtAuthenticationExtensions
 {
@@ -15,9 +14,12 @@ public static class JwtAuthenticationExtensions
     )
     {
         var jwtSettings = configuration.GetSection("Jwt");
-        var secretKey =
-            jwtSettings["SecretKey"]
-            ?? throw new InvalidOperationException("JWT SecretKey not configured");
+        var authority =
+            jwtSettings["Authority"]
+            ?? throw new InvalidOperationException("JWT Authority not configured");
+        var audience =
+            jwtSettings["Audience"]
+            ?? throw new InvalidOperationException("JWT Audience not configured");
 
         services
             .AddAuthentication(options =>
@@ -25,43 +27,63 @@ public static class JwtAuthenticationExtensions
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+            .AddJwtBearer(
+                "Bearer",
+                options =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings["Issuer"],
-                    ValidAudience = jwtSettings["Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                    ClockSkew = TimeSpan.Zero,
-                };
+                    // URL do Keycloak realm
+                    options.Authority = authority;
+                    // Client ID configurado no Keycloak
+                    options.Audience = audience;
+                    // Apenas false em desenvolvimento
+                    options.RequireHttpsMetadata = false;
 
-                options.Events = new JwtBearerEvents
-                {
-                    OnAuthenticationFailed = context =>
+                    // Configuração do MetadataAddress para buscar as chaves públicas do Keycloak
+                    options.MetadataAddress = $"{authority}/.well-known/openid-configuration";
+
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        var logger = context.HttpContext.RequestServices.GetRequiredService<
-                            ILogger<Program>
-                        >();
-                        logger.LogError(context.Exception, "Authentication failed");
-                        return Task.CompletedTask;
-                    },
-                    OnTokenValidated = context =>
+                        ValidateIssuerSigningKey = true,
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidIssuer = authority,
+                        ValidAudience = audience,
+                        // Remove tolerância de tempo - validação estrita
+                        ClockSkew = TimeSpan.Zero,
+                    };
+
+                    options.Events = new JwtBearerEvents
                     {
-                        var logger = context.HttpContext.RequestServices.GetRequiredService<
-                            ILogger<Program>
-                        >();
-                        logger.LogInformation(
-                            "Token validated for user: {User}",
-                            context.Principal?.Identity?.Name
-                        );
-                        return Task.CompletedTask;
-                    },
-                };
-            });
+                        OnAuthenticationFailed = context =>
+                        {
+                            var logger = context.HttpContext.RequestServices.GetRequiredService<
+                                ILogger<Program>
+                            >();
+                            logger.LogError(
+                                context.Exception,
+                                "JWT authentication failed: {Message}",
+                                context.Exception.Message
+                            );
+                            return Task.CompletedTask;
+                        },
+                        OnTokenValidated = context =>
+                        {
+                            var logger = context.HttpContext.RequestServices.GetRequiredService<
+                                ILogger<Program>
+                            >();
+                            var userId = context.Principal?.FindFirst("sub")?.Value;
+                            var scopes = context.Principal?.FindFirst("scope")?.Value;
+                            logger.LogInformation(
+                                "Token validated for user {UserId} with scopes: {Scopes}",
+                                userId,
+                                scopes
+                            );
+                            return Task.CompletedTask;
+                        },
+                    };
+                }
+            );
 
         return services;
     }

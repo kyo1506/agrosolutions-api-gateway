@@ -102,6 +102,10 @@ app.UseCors("AllowAll");
 
 app.UseRouting();
 
+// Autenticação e Autorização (ANTES do Ocelot)
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Health checks
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/ready");

@@ -11,6 +11,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
+      - Jwt__Authority=http://keycloak:8080/realms/agrosolutions
+      - Jwt__Audience=agrosolutions-api
     volumes:
       - ./logs:/app/logs
     networks:
