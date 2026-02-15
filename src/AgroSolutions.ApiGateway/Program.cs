@@ -3,6 +3,7 @@ using AgroSolutions.ApiGateway.Middlewares;
 using Ocelot.Cache.CacheManager;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using Ocelot.Provider.Polly;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -72,7 +73,8 @@ builder
     .AddCacheManager(x =>
     {
         x.WithDictionaryHandle();
-    });
+    })
+    .AddPolly();
 
 // Configurar autenticação JWT (se necessário)
 builder.Services.AddJwtAuthentication(builder.Configuration);

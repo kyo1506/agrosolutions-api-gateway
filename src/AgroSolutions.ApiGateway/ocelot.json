@@ -5,51 +5,37 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-identity-api",
-          "Port": 80
+          "Host": "identity-api",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/identity/v1/login",
+      "UpstreamPathTemplate": "/api/identity/v1/login",
       "UpstreamHttpMethod": ["POST"],
-      "Key": "identity-login",
-      "RateLimitOptions": {
-        "ClientWhitelist": [],
-        "EnableRateLimiting": true,
-        "Period": "1m",
-        "PeriodTimespan": 60,
-        "Limit": 50
-      }
+      "Key": "identity-login"
     },
     {
       "DownstreamPathTemplate": "/v1/register",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-identity-api",
-          "Port": 80
+          "Host": "identity-api",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/identity/v1/register",
+      "UpstreamPathTemplate": "/api/identity/v1/register",
       "UpstreamHttpMethod": ["POST"],
-      "Key": "identity-register",
-      "RateLimitOptions": {
-        "ClientWhitelist": [],
-        "EnableRateLimiting": true,
-        "Period": "1m",
-        "PeriodTimespan": 60,
-        "Limit": 30
-      }
+      "Key": "identity-register"
     },
     {
       "DownstreamPathTemplate": "/v1/profile",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-identity-api",
-          "Port": 80
+          "Host": "identity-api",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/identity/v1/profile",
+      "UpstreamPathTemplate": "/api/identity/v1/profile",
       "UpstreamHttpMethod": ["GET", "PUT"],
       "Key": "identity-profile",
       "AuthenticationOptions": {
@@ -71,11 +57,11 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-identity-api",
-          "Port": 80
+          "Host": "identity-api",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/identity/v1/users/{id}",
+      "UpstreamPathTemplate": "/api/identity/v1/users/{id}",
       "UpstreamHttpMethod": ["GET"],
       "Key": "identity-user-by-id",
       "Priority": 1,
@@ -98,11 +84,11 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-identity-api",
-          "Port": 80
+          "Host": "identity-api",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/identity/v1/users/{everything}",
+      "UpstreamPathTemplate": "/api/identity/v1/users/{everything}",
       "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
       "Key": "identity-users",
       "AuthenticationOptions": {
@@ -129,7 +115,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-gestao-api",
+          "Host": "gestao-api",
           "Port": 80
         }
       ],
@@ -163,7 +149,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-ingestao-api",
+          "Host": "ingestao-api",
           "Port": 80
         }
       ],
@@ -198,7 +184,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-telemetria-api",
+          "Host": "telemetria-api",
           "Port": 80
         }
       ],
@@ -231,7 +217,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-alertas-api",
+          "Host": "alertas-api",
           "Port": 80
         }
       ],
@@ -260,7 +246,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-dashboard-api",
+          "Host": "dashboard-api",
           "Port": 80
         }
       ],
@@ -287,7 +273,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-gestao-api",
+          "Host": "gestao-api",
           "Port": 80
         }
       ],
@@ -299,41 +285,33 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "agrosolutions-ingestao-api",
+          "Host": "ingestao-api",
           "Port": 80
         }
       ],
       "UpstreamPathTemplate": "/ingestao/health",
       "UpstreamHttpMethod": [ "GET" ]
-    }
-  ],
-  "Aggregates": [
+    },
     {
-      "RouteKeys": [
-        "gestao",
-        "telemetria"
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity-api",
+          "Port": 8080
+        }
       ],
-      "UpstreamPathTemplate": "/api/dashboard/propriedade/{id}",
-      "Aggregator": "PropriedadeAggregator"
+      "UpstreamPathTemplate": "/api/identity/health",
+      "UpstreamHttpMethod": [ "GET" ]
     }
   ],
   "GlobalConfiguration": {
     "BaseUrl": "http://localhost:5000",
     "RequestIdKey": "X-Correlation-Id",
-    "RateLimitOptions": {
-      "DisableRateLimitHeaders": false,
-      "QuotaExceededMessage": "Rate limit exceeded. Please try again later.",
-      "HttpStatusCode": 429,
-      "ClientIdHeader": "X-ClientId"
-    },
     "QoSOptions": {
       "ExceptionsAllowedBeforeBreaking": 3,
       "DurationOfBreak": 30000,
       "TimeoutValue": 10000
-    },
-    "ServiceDiscoveryProvider": {
-      "Namespace": "agrosolutions",
-      "Type": "Kubernetes"
     }
   }
 }
