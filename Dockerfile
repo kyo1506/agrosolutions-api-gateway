@@ -22,8 +22,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 # Criar usuário não-root para segurança
-RUN addgroup --system --gid 1000 appuser \
-    && adduser --system --uid 1000 --ingroup appuser --shell /bin/sh appuser
+RUN groupadd --system --gid 10000 appuser \
+    && useradd --system --uid 10000 --gid appuser --shell /bin/sh appuser
 
 # Copiar arquivos publicados
 COPY --from=publish /app/publish .
