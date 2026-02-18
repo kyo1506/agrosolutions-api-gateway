@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.vscode
+.vs
+
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# Logs
+logs/
+*.log
+
+# Tests
+**/tests/
+
+# Documentation
+*.md
+README.md
+LICENSE
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# Kubernetes
+k8s/
+*.yaml
+*.yml
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Other
+*.user
+*.suo
+*.cache
+*.cache.xml

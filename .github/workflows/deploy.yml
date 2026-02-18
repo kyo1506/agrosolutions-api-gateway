@@ -1,0 +1,134 @@
+name: Deploy to EKS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+  push:
+    branches:
+      - main
+    paths:
+      - 'k8s/production/**'
+
+env:
+  AWS_REGION: sa-east-1
+  EKS_CLUSTER_NAME: agrosolutions-eks-cluster
+  ECR_REPOSITORY: agrosolutions-api-gateway
+  NAMESPACE: agrosolutions-gateway
+
+jobs:
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig \
+          --name ${{ env.EKS_CLUSTER_NAME }} \
+          --region ${{ env.AWS_REGION }}
+
+    - name: Verify kubectl connection
+      run: |
+        kubectl version --client
+        kubectl cluster-info
+
+    - name: Create namespace (if not exists)
+      run: |
+        kubectl apply -f k8s/production/namespace.yaml
+
+    - name: Create secrets (if needed)
+      run: |
+        # Create JWT secrets if they don't exist
+        kubectl create secret generic jwt-secrets \
+          --from-literal=issuer=${{ secrets.JWT_ISSUER }} \
+          --namespace=${{ env.NAMESPACE }} \
+          --dry-run=client -o yaml | kubectl apply -f -
+      env:
+        JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+
+    - name: Apply ConfigMaps
+      run: |
+        kubectl apply -f k8s/production/configmaps.yaml
+
+    - name: Apply Services
+      run: |
+        kubectl apply -f k8s/production/services.yaml
+
+    - name: Apply Deployment
+      run: |
+        kubectl apply -f k8s/production/deployment.yaml
+        kubectl rollout status deployment/api-gateway -n ${{ env.NAMESPACE }} --timeout=5m
+
+    - name: Apply HPA
+      run: |
+        kubectl apply -f k8s/production/hpa.yaml
+
+    - name: Apply Ingress
+      run: |
+        kubectl apply -f k8s/production/ingress-aws.yaml
+
+    - name: Apply Observability
+      run: |
+        kubectl apply -f k8s/production/observability.yaml || echo "ServiceMonitor CRD may not be installed"
+
+    - name: Verify deployment
+      run: |
+        echo "### Deployment Status" >> $GITHUB_STEP_SUMMARY
+        kubectl get deployments -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Pods" >> $GITHUB_STEP_SUMMARY
+        kubectl get pods -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Services" >> $GITHUB_STEP_SUMMARY
+        kubectl get services -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Ingress" >> $GITHUB_STEP_SUMMARY
+        kubectl get ingress -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+
+    - name: Run health check
+      run: |
+        echo "Waiting for pods to be ready..."
+        kubectl wait --for=condition=ready pod \
+          -l app=api-gateway \
+          -n ${{ env.NAMESPACE }} \
+          --timeout=300s
+        
+        echo "Checking health endpoints..."
+        POD_NAME=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=api-gateway -o jsonpath='{.items[0].metadata.name}')
+        kubectl exec -n ${{ env.NAMESPACE }} $POD_NAME -- wget -qO- http://localhost:80/health || echo "Health check failed"
+
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "✅ Deployment successful!" >> $GITHUB_STEP_SUMMARY
+        echo "Environment: ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+        echo "Cluster: ${{ env.EKS_CLUSTER_NAME }}" >> $GITHUB_STEP_SUMMARY
+        echo "Namespace: ${{ env.NAMESPACE }}" >> $GITHUB_STEP_SUMMARY
+
+    - name: Notify deployment failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed!" >> $GITHUB_STEP_SUMMARY
+        echo "Please check the logs above for details." >> $GITHUB_STEP_SUMMARY

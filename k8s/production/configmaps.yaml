@@ -1,0 +1,128 @@
+---
+# API Gateway ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+  namespace: agrosolutions-gateway
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://*:80"
+  AllowedHosts: "*"
+  
+  # JWT Configuration
+  Jwt__Authority: "http://keycloak-service.agrosolutions-identity:8080/realms/agrosolutions"
+  Jwt__Audience: "agrosolutions-api"
+  
+  # OpenTelemetry Configuration
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector-service:4317"
+  OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+  OTEL_SERVICE_NAME: "agrosolutions-api-gateway"
+  OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=production,service.version=1.0.0"
+  OTEL_TRACES_EXPORTER: "otlp"
+  OTEL_METRICS_EXPORTER: "otlp"
+  OTEL_LOGS_EXPORTER: "otlp"
+
+  # Serilog Configuration
+  Serilog__MinimumLevel__Default: "Information"
+  Serilog__MinimumLevel__Override__Microsoft: "Warning"
+  Serilog__MinimumLevel__Override__System: "Warning"
+
+---
+# Ocelot Configuration ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ocelot-config
+  namespace: agrosolutions-gateway
+data:
+  ocelot.json: |
+    {
+      "Routes": [
+        {
+          "DownstreamPathTemplate": "/v1/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "identity-api-service.agrosolutions-identity",
+              "Port": 80
+            }
+          ],
+          "UpstreamPathTemplate": "/identity/v1/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "RouteClaimsRequirement": {
+            "scope": "users:read,users:manage"
+          },
+          "RateLimitOptions": {
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "Limit": 200
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 30000,
+            "TimeoutValue": 10000
+          }
+        },
+        {
+          "DownstreamPathTemplate": "/v1/{action}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "identity-api-service.agrosolutions-identity",
+              "Port": 80
+            }
+          ],
+          "UpstreamPathTemplate": "/identity/v1/{action}",
+          "UpstreamHttpMethod": ["POST"],
+          "RateLimitOptions": {
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "Limit": 50
+          }
+        },
+        {
+          "DownstreamPathTemplate": "/api/gestao/{everything}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "agrosolutions-gestao-api",
+              "Port": 80
+            }
+          ],
+          "UpstreamPathTemplate": "/gestao/{everything}",
+          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "RouteClaimsRequirement": {
+            "scope": "users:read"
+          },
+          "RateLimitOptions": {
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "Limit": 100
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 30000,
+            "TimeoutValue": 10000
+          },
+          "LoadBalancerOptions": {
+            "Type": "RoundRobin"
+          }
+        }
+      ],
+      "GlobalConfiguration": {
+        "BaseUrl": "http://api.agrosolutions.com",
+        "RateLimitOptions": {
+          "DisableRateLimitHeaders": false,
+          "QuotaExceededMessage": "Rate limit exceeded. Please try again later.",
+          "HttpStatusCode": 429,
+          "ClientIdHeader": "X-Client-Id"
+        }
+      }
+    }

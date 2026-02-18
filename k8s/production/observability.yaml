@@ -1,0 +1,44 @@
+---
+# ServiceMonitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: api-gateway-metrics
+  namespace: agrosolutions-gateway
+  labels:
+    app: api-gateway
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: api-gateway
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - agrosolutions-gateway
+
+---
+# PodMonitor for additional pod-level metrics
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: api-gateway-pods
+  namespace: agrosolutions-gateway
+  labels:
+    app: api-gateway
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: api-gateway
+  podMetricsEndpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+  namespaceSelector:
+    matchNames:
+    - agrosolutions-gateway
