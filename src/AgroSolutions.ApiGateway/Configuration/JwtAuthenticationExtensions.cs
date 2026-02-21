@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -20,6 +21,12 @@ public static class JwtAuthenticationExtensions
         var audience =
             jwtSettings["Audience"]
             ?? throw new InvalidOperationException("JWT Audience not configured");
+
+        // Issuers válidos: interno (keycloak-service FQDN) + externo (via Ingress/ALB)
+        var externalAuthority = jwtSettings["ExternalAuthority"];
+        var validIssuers = new List<string> { authority };
+        if (!string.IsNullOrEmpty(externalAuthority))
+            validIssuers.Add(externalAuthority);
 
         services
             .AddAuthentication(options =>
@@ -47,7 +54,7 @@ public static class JwtAuthenticationExtensions
                         ValidateIssuer = true,
                         ValidateAudience = true,
                         ValidateLifetime = true,
-                        ValidIssuer = authority,
+                        ValidIssuers = validIssuers,
                         ValidAudience = audience,
                         // Remove tolerância de tempo - validação estrita
                         ClockSkew = TimeSpan.Zero,
@@ -73,12 +80,32 @@ public static class JwtAuthenticationExtensions
                                 ILogger<Program>
                             >();
                             var userId = context.Principal?.FindFirst("sub")?.Value;
-                            var scopes = context.Principal?.FindFirst("scope")?.Value;
+                            var scopeClaim = context.Principal?.FindFirst("scope")?.Value;
+
                             logger.LogInformation(
                                 "Token validated for user {UserId} with scopes: {Scopes}",
                                 userId,
-                                scopes
+                                scopeClaim
                             );
+
+                            // Ocelot RouteClaimsRequirement compara claim values por vírgula.
+                            // Keycloak emite scopes separados por espaço em uma única claim.
+                            // Solução: dividir a claim de scope por espaço e adicionar cada
+                            // scope como uma claim individual, compatível com o Ocelot.
+                            if (!string.IsNullOrEmpty(scopeClaim) && context.Principal != null)
+                            {
+                                var scopes = scopeClaim.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                                var identity = context.Principal.Identity as ClaimsIdentity;
+                                if (identity != null)
+                                {
+                                    foreach (var scope in scopes)
+                                    {
+                                        if (!identity.HasClaim("scope", scope))
+                                            identity.AddClaim(new Claim("scope", scope));
+                                    }
+                                }
+                            }
+
                             return Task.CompletedTask;
                         },
                     };

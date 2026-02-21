@@ -13,6 +13,7 @@ data:
   # JWT Configuration
   Jwt__Authority: "http://keycloak-service.agrosolutions-identity:8080/realms/agrosolutions"
   Jwt__Audience: "agrosolutions-api"
+  Jwt__ExternalAuthority: "http://keycloak-admin.agrosolutions.site/realms/agrosolutions"
   
   # OpenTelemetry Configuration (OTel Collector já sobe no agrosolutions-observability via service-identity)
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector-service.agrosolutions-observability:4317"
