@@ -49,7 +49,7 @@ jobs:
     if: github.event_name == 'push'
     
     permissions:
-      id-token: write
+      id-token: write   # necessário para OIDC
       contents: read
 
     steps:
