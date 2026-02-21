@@ -30,9 +30,6 @@ metadata:
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
     
-    # SSL/TLS (configure certificate ARN)
-    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:sa-east-1:316295889438:certificate/YOUR-CERT-ID
-    
     # Tags AWS
     alb.ingress.kubernetes.io/tags: Environment=production,Service=api-gateway,ManagedBy=kubernetes
 spec:
