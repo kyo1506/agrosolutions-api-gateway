@@ -1,44 +1,46 @@
----
-# ServiceMonitor for Prometheus
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: api-gateway-metrics
-  namespace: agrosolutions-gateway
-  labels:
-    app: api-gateway
-    release: prometheus
-spec:
-  selector:
-    matchLabels:
-      app: api-gateway
-  endpoints:
-  - port: http
-    path: /metrics
-    interval: 30s
-    scrapeTimeout: 10s
-  namespaceSelector:
-    matchNames:
-    - agrosolutions-gateway
-
----
-# PodMonitor for additional pod-level metrics
-apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
-metadata:
-  name: api-gateway-pods
-  namespace: agrosolutions-gateway
-  labels:
-    app: api-gateway
-    release: prometheus
-spec:
-  selector:
-    matchLabels:
-      app: api-gateway
-  podMetricsEndpoints:
-  - port: http
-    path: /metrics
-    interval: 30s
-  namespaceSelector:
-    matchNames:
-    - agrosolutions-gateway
+# Observabilidade - API Gateway
+#
+# O stack de observabilidade (Prometheus, Grafana, Loki, Tempo, OTel Collector)
+# já sobe no namespace `agrosolutions-observability` via agrosolutions-service-identity.
+# Não é necessário redeploy aqui.
+#
+# O Prometheus standalone usa scraping por anotações (sem Prometheus Operator).
+# As anotações já estão configuradas em:
+#   - services.yaml    (prometheus.io/scrape, prometheus.io/port, prometheus.io/path)
+#   - deployment.yaml  (prometheus.io/scrape, prometheus.io/port, prometheus.io/path)
+#
+# O OTel Collector recebe traces/metrics/logs via:
+#   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector-service.agrosolutions-observability:4317
+#
+# Para que o Prometheus do namespace agrosolutions-observability possa scrape
+# este namespace, certifique-se de que o prometheus-config (ConfigMap em
+# agrosolutions-observability) inclua um job para o namespace agrosolutions-gateway.
+# Exemplo de job a adicionar ao prometheus.yml do Identity Service:
+#
+# - job_name: 'api-gateway'
+#   kubernetes_sd_configs:
+#     - role: pod
+#       namespaces:
+#         names:
+#           - agrosolutions-gateway
+#   relabel_configs:
+#     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+#       action: keep
+#       regex: true
+#     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+#       action: replace
+#       target_label: __metrics_path__
+#       regex: (.+)
+#     - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+#       action: replace
+#       regex: ([^:]+)(?::\d+)?;(\d+)
+#       replacement: $1:$2
+#       target_label: __address__
+#     - action: labelmap
+#       regex: __meta_kubernetes_pod_label_(.*)
+#     - source_labels: [__meta_kubernetes_namespace]
+#       action: replace
+#       target_label: kubernetes_namespace
+#     - source_labels: [__meta_kubernetes_pod_name]
+#       action: replace
+#       target_label: kubernetes_pod_name

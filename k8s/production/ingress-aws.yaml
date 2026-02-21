@@ -18,7 +18,6 @@ metadata:
   namespace: agrosolutions-gateway
   annotations:
     # AWS Load Balancer Controller
-    kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
@@ -37,6 +36,7 @@ metadata:
     # Tags AWS
     alb.ingress.kubernetes.io/tags: Environment=production,Service=api-gateway,ManagedBy=kubernetes
 spec:
+  ingressClassName: alb
   rules:
     - host: api.agrosolutions.com
       http:

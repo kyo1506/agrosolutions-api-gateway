@@ -10,12 +10,9 @@ metadata:
     component: gateway
     tier: infrastructure
 spec:
-  replicas: 3
+  replicas: 1
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    type: Recreate
   selector:
     matchLabels:
       app: api-gateway
@@ -31,6 +28,7 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       terminationGracePeriodSeconds: 30
+      serviceAccountName: agrosolutions-gateway-sa
       containers:
       - name: api-gateway
         image: 316295889438.dkr.ecr.sa-east-1.amazonaws.com/agrosolutions-api-gateway:latest
@@ -52,11 +50,11 @@ spec:
               optional: true
         resources:
           requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
             memory: "512Mi"
             cpu: "500m"
-          limits:
-            memory: "2Gi"
-            cpu: "2000m"
         readinessProbe:
           httpGet:
             path: /health/ready
@@ -86,15 +84,3 @@ spec:
           name: ocelot-config
       - name: logs
         emptyDir: {}
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: app
-                  operator: In
-                  values:
-                  - api-gateway
-              topologyKey: kubernetes.io/hostname

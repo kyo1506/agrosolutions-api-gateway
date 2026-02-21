@@ -58,6 +58,14 @@ jobs:
       run: |
         kubectl apply -f k8s/production/namespace.yaml
 
+    - name: Apply Infrastructure (ServiceAccount, IRSA)
+      run: |
+        kubectl apply -f k8s/production/infrastructure.yaml
+
+    - name: Apply Resource Configs (Quotas, LimitRanges, PDB)
+      run: |
+        kubectl apply -f k8s/production/resource-configs.yaml
+
     - name: Create secrets (if needed)
       run: |
         # Create JWT secrets if they don't exist
@@ -88,10 +96,6 @@ jobs:
     - name: Apply Ingress
       run: |
         kubectl apply -f k8s/production/ingress-aws.yaml
-
-    - name: Apply Observability
-      run: |
-        kubectl apply -f k8s/production/observability.yaml || echo "ServiceMonitor CRD may not be installed"
 
     - name: Verify deployment
       run: |

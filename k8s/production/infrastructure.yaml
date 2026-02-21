@@ -1,0 +1,18 @@
+---
+# AWS IAM Role for Service Account (IRSA)
+# Permite que os pods assumam uma IAM Role sem credenciais explícitas
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agrosolutions-gateway-sa
+  namespace: agrosolutions-gateway
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::316295889438:role/AgroSolutionsGatewayServiceRole
+
+---
+# Note: Secrets devem ser criados manualmente ou via GitOps/Sealed Secrets
+# Os templates abaixo são EXEMPLOS - NÃO commite secrets reais no Git
+
+# kubectl create secret generic jwt-secrets \
+#   --from-literal=issuer=http://keycloak-service.agrosolutions-identity:8080/realms/agrosolutions \
+#   -n agrosolutions-gateway

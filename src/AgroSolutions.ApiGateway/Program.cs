@@ -108,15 +108,18 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Health checks
-app.MapHealthChecks("/health");
-app.MapHealthChecks("/health/ready");
-app.MapHealthChecks("/health/live");
+// Health checks e métricas devem ser resolvidos pelo endpoint routing
+// ANTES do Ocelot (que é middleware terminal e interceptaria esses paths)
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapHealthChecks("/health");
+    endpoints.MapHealthChecks("/health/ready");
+    endpoints.MapHealthChecks("/health/live");
+    endpoints.MapPrometheusScrapingEndpoint();
+    endpoints.MapControllers();
+});
 
-// Prometheus metrics endpoint
-app.MapPrometheusScrapingEndpoint();
-
-// Ocelot Middleware
+// Ocelot Middleware (terminal - processa tudo que não foi resolvido acima)
 await app.UseOcelot();
 
 app.Run();
