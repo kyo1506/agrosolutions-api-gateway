@@ -9,7 +9,7 @@
           "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/api/identity/v1/login",
+      "UpstreamPathTemplate": "/identity/v1/login",
       "UpstreamHttpMethod": ["POST"],
       "Key": "identity-login"
     },
@@ -22,7 +22,7 @@
           "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/api/identity/v1/register",
+      "UpstreamPathTemplate": "/identity/v1/register",
       "UpstreamHttpMethod": ["POST"],
       "Key": "identity-register"
     },
@@ -35,7 +35,7 @@
           "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/api/identity/v1/profile",
+      "UpstreamPathTemplate": "/identity/v1/profile",
       "UpstreamHttpMethod": ["GET", "PUT"],
       "Key": "identity-profile",
       "AuthenticationOptions": {
@@ -61,7 +61,7 @@
           "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/api/identity/v1/users/{id}",
+      "UpstreamPathTemplate": "/identity/v1/users/{id}",
       "UpstreamHttpMethod": ["GET"],
       "Key": "identity-user-by-id",
       "Priority": 1,
@@ -69,7 +69,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "scope": "users:read,users:manage"
+        "scope": "users:read"
       },
       "RateLimitOptions": {
         "ClientWhitelist": [],
@@ -80,7 +80,7 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/v1/users/{everything}",
+      "DownstreamPathTemplate": "/v1/users",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -88,9 +88,73 @@
           "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/api/identity/v1/users/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
-      "Key": "identity-users",
+      "UpstreamPathTemplate": "/identity/v1/users",
+      "UpstreamHttpMethod": ["GET"],
+      "Key": "identity-users-list",
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "scope": "users:manage"
+      },
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 60,
+        "Limit": 100
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 30000,
+        "TimeoutValue": 10000
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/v1/users/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/identity/v1/users/{id}",
+      "UpstreamHttpMethod": ["PUT"],
+      "Key": "identity-user-update",
+      "Priority": 1,
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "scope": "users:manage"
+      },
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 60,
+        "Limit": 100
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 30000,
+        "TimeoutValue": 10000
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/v1/users/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/identity/v1/users/{id}",
+      "UpstreamHttpMethod": ["DELETE"],
+      "Key": "identity-user-delete",
+      "Priority": 1,
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
       },
@@ -126,7 +190,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "scope": "users:read,users:manage"
+        "scope": "users:read"
       },
       "RateLimitOptions": {
         "ClientWhitelist": [],
@@ -195,7 +259,7 @@
         "AuthenticationProviderKey": "Bearer"
       },
       "RouteClaimsRequirement": {
-        "scope": "users:read,users:manage"
+        "scope": "users:read"
       },
       "RateLimitOptions": {
         "ClientWhitelist": [],
@@ -301,7 +365,7 @@
           "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/api/identity/health",
+      "UpstreamPathTemplate": "/identity/health",
       "UpstreamHttpMethod": [ "GET" ]
     }
   ],

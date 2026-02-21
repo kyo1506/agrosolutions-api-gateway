@@ -87,8 +87,8 @@ data:
           }
         },
         {
-          "Key": "identity-protected",
-          "DownstreamPathTemplate": "/v1/{everything}",
+          "Key": "identity-users-list",
+          "DownstreamPathTemplate": "/v1/users",
           "DownstreamScheme": "http",
           "DownstreamHostAndPorts": [
             {
@@ -96,13 +96,132 @@ data:
               "Port": 80
             }
           ],
-          "UpstreamPathTemplate": "/identity/v1/{everything}",
-          "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+          "UpstreamPathTemplate": "/identity/v1/users",
+          "UpstreamHttpMethod": ["GET"],
           "AuthenticationOptions": {
             "AuthenticationProviderKey": "Bearer"
           },
           "RouteClaimsRequirement": {
-            "scope": "users:read,users:manage"
+            "scope": "users:manage"
+          },
+          "RateLimitOptions": {
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "Limit": 100
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 30000,
+            "TimeoutValue": 10000
+          }
+        },
+        {
+          "Key": "identity-user-get-by-id",
+          "DownstreamPathTemplate": "/v1/users/{id}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "identity-api-service.agrosolutions-identity",
+              "Port": 80
+            }
+          ],
+          "UpstreamPathTemplate": "/identity/v1/users/{id}",
+          "UpstreamHttpMethod": ["GET"],
+          "Priority": 1,
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "RouteClaimsRequirement": {
+            "scope": "users:read"
+          },
+          "RateLimitOptions": {
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "Limit": 100
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 30000,
+            "TimeoutValue": 10000
+          }
+        },
+        {
+          "Key": "identity-user-update",
+          "DownstreamPathTemplate": "/v1/users/{id}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "identity-api-service.agrosolutions-identity",
+              "Port": 80
+            }
+          ],
+          "UpstreamPathTemplate": "/identity/v1/users/{id}",
+          "UpstreamHttpMethod": ["PUT"],
+          "Priority": 1,
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "RouteClaimsRequirement": {
+            "scope": "users:manage"
+          },
+          "RateLimitOptions": {
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "Limit": 100
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 30000,
+            "TimeoutValue": 10000
+          }
+        },
+        {
+          "Key": "identity-user-delete",
+          "DownstreamPathTemplate": "/v1/users/{id}",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "identity-api-service.agrosolutions-identity",
+              "Port": 80
+            }
+          ],
+          "UpstreamPathTemplate": "/identity/v1/users/{id}",
+          "UpstreamHttpMethod": ["DELETE"],
+          "Priority": 1,
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "RouteClaimsRequirement": {
+            "scope": "users:manage"
+          },
+          "RateLimitOptions": {
+            "EnableRateLimiting": true,
+            "Period": "1m",
+            "Limit": 100
+          },
+          "QoSOptions": {
+            "ExceptionsAllowedBeforeBreaking": 3,
+            "DurationOfBreak": 30000,
+            "TimeoutValue": 10000
+          }
+        },
+        {
+          "Key": "identity-profile",
+          "DownstreamPathTemplate": "/v1/profile",
+          "DownstreamScheme": "http",
+          "DownstreamHostAndPorts": [
+            {
+              "Host": "identity-api-service.agrosolutions-identity",
+              "Port": 80
+            }
+          ],
+          "UpstreamPathTemplate": "/identity/v1/profile",
+          "UpstreamHttpMethod": ["GET", "PUT"],
+          "AuthenticationOptions": {
+            "AuthenticationProviderKey": "Bearer"
+          },
+          "RouteClaimsRequirement": {
+            "scope": "profiles:manage"
           },
           "RateLimitOptions": {
             "EnableRateLimiting": true,
