@@ -116,7 +116,7 @@ data:
         }
       ],
       "GlobalConfiguration": {
-        "BaseUrl": "https://api.agrosolutions.com",
+        "BaseUrl": "http://api.agrosolutions.site",
         "RateLimitOptions": {
           "DisableRateLimitHeaders": false,
           "QuotaExceededMessage": "Rate limit exceeded. Please try again later.",
