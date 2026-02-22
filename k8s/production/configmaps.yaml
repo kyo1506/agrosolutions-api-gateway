@@ -233,8 +233,7 @@ data:
             "DurationOfBreak": 30000,
             "TimeoutValue": 10000
           }
-        }
-      ],
+        },
         {
           "Key": "properties-read",
           "DownstreamPathTemplate": "/v1/{everything}",
