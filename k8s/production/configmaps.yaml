@@ -15,7 +15,7 @@ data:
   Jwt__Audience: "agrosolutions-api"
   Jwt__ExternalAuthority: "http://keycloak-admin.agrosolutions.site/realms/agrosolutions"
 
-  # OpenTelemetry Configuration (OTel Collector já sobe no agrosolutions-observability via service-identity)
+  # OpenTelemetry Configuration
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector-service.agrosolutions-observability:4317"
   OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
   OTEL_SERVICE_NAME: "agrosolutions-api-gateway"
